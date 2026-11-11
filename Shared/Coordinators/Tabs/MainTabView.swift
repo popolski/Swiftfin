@@ -12,8 +12,47 @@ import JellyfinAPI
 import SwiftUI
 @_spi(Advanced) import SwiftUIIntrospect
 
-// TODO: fix weird tvOS icon rendering
+/// Loads the user's libraries on tvOS so each one gets its own sidebar entry.
 struct MainTabView: View {
+
+    #if os(tvOS)
+    @Injected(\.currentUserSession)
+    private var userSession
+
+    @State
+    private var userViews: [BaseItemDto]?
+
+    private func loadUserViews() async -> [BaseItemDto] {
+        guard let userSession else { return [] }
+
+        let parameters = Paths.GetUserViewsParameters(userID: userSession.user.id)
+        let response = try? await userSession.send(Paths.getUserViews(parameters: parameters))
+
+        return (response?.value.items ?? []).filter {
+            CollectionType.supportedCases.contains($0.collectionType ?? .folders)
+        }
+    }
+    #endif
+
+    @ContentBuilder
+    var body: some View {
+        #if os(tvOS)
+        if let userViews {
+            MainTabContentView(userViews: userViews)
+        } else {
+            ProgressView()
+                .task {
+                    userViews = await loadUserViews()
+                }
+        }
+        #else
+        MainTabContentView(userViews: [])
+        #endif
+    }
+}
+
+// TODO: fix weird tvOS icon rendering
+private struct MainTabContentView: View {
 
     #if os(tvOS)
     @Default(.Customization.tabBarPlacement)
@@ -26,11 +65,11 @@ struct MainTabView: View {
     @StateObject
     private var tabCoordinator: TabCoordinator
 
-    init() {
-        _tabCoordinator = StateObject(wrappedValue: Self.defaultTabCoordinator)
+    init(userViews: [BaseItemDto]) {
+        _tabCoordinator = StateObject(wrappedValue: Self.defaultTabCoordinator(userViews: userViews))
     }
 
-    private static var defaultTabCoordinator: TabCoordinator {
+    private static func defaultTabCoordinator(userViews: [BaseItemDto]) -> TabCoordinator {
         #if os(iOS)
         TabCoordinator {
             TabItem.contentGroup(provider: DefaultContentGroupProvider())
@@ -40,21 +79,26 @@ struct MainTabView: View {
         #else
         TabCoordinator {
             TabItem.contentGroup(provider: DefaultContentGroupProvider())
-
-            TabItem.library(
-                title: L10n.tvShowsCapitalized,
-                systemName: "tv",
-                filters: .init(itemTypes: [.series])
-            )
-
-            TabItem.library(
-                title: L10n.movies,
-                systemName: "film",
-                filters: .init(itemTypes: [.movie])
-            )
-
             TabItem.search
-            TabItem.media
+
+            if userViews.isEmpty {
+                TabItem.library(
+                    title: L10n.tvShowsCapitalized,
+                    systemName: "tv",
+                    filters: .init(itemTypes: [.series])
+                )
+
+                TabItem.library(
+                    title: L10n.movies,
+                    systemName: "film",
+                    filters: .init(itemTypes: [.movie])
+                )
+
+                TabItem.media
+            } else {
+                userViews.map { TabItem.userView($0) }
+            }
+
             TabItem.settings
         }
         #endif

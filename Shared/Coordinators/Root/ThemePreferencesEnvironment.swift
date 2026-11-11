@@ -54,7 +54,7 @@ private struct StoredThemePreferencesModifier: ViewModifier {
 
     private var theme: AppTheme.Value {
         #if os(tvOS)
-        AppTheme.Value(appearance: .dark, accentColor: userID == nil ? .jellyfinPurple : userAccentColor)
+        AppTheme.Value(appearance: .dark, accentColor: userID == nil ? .amber : userAccentColor)
         #else
         if userID != nil {
             AppTheme.Value(appearance: userAppearance, accentColor: userAccentColor)

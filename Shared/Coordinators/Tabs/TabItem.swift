@@ -102,6 +102,33 @@ extension TabItem {
         }
     }
 
+    /// One sidebar entry for a single user library.
+    static func userView(_ item: BaseItemDto) -> TabItem {
+        if item.collectionType == .livetv {
+            return .liveTV
+        }
+
+        let systemImage = switch item.collectionType {
+        case .movies: "film"
+        case .tvshows: "tv"
+        case .musicvideos: "music.note.tv"
+        case .homevideos: "video"
+        case .boxsets: "square.stack"
+        default: "folder"
+        }
+
+        return TabItem(
+            id: "library-\(item.id ?? UUID().uuidString)",
+            title: item.displayTitle,
+            systemImage: systemImage
+        ) {
+            PagingLibraryView(library: ItemLibrary(parent: item, filters: .default))
+                .if(ViewLayout.platformDefault.isLarge) { view in
+                    view.toolbar(.hidden, for: .navigationBar)
+                }
+        }
+    }
+
     static var media: TabItem {
         TabItem(
             id: "media",

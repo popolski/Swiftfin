@@ -1,8 +1,7 @@
 name: "Build 🔨"
 
 on:
-  schedule:
-    - cron: '0 0 * * *'
+  workflow_dispatch:
   push:
     branches: [ main ]
     paths:
@@ -32,7 +31,6 @@ jobs:
       fail-fast: false
       matrix:
         scheme:
-          - "Swiftfin"
           - "Swiftfin tvOS"
 
     runs-on: xcode-27

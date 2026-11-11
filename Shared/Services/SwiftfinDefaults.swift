@@ -93,7 +93,7 @@ extension Defaults.Keys {
 
     /// The saved accent color for a specific user.
     static func userAccentColor(userID: String) -> Key<Color> {
-        userKeys.key("userAccentColor", default: .jellyfinPurple, suiteName: userID)
+        userKeys.key("userAccentColor", default: .amber, suiteName: userID)
     }
 
     /// The saved appearance for a specific user.
