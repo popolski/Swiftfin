@@ -82,19 +82,10 @@ struct CinematicSelectionContentGroup: ContentGroup {
             ) { item in
                 router.route(to: .item(item: item.snapshot))
             } topContent: { item in
-                ImageView(itemSelectorImageSource(for: item.snapshot))
-                    .placeholder { _ in
-                        EmptyView()
-                    }
-                    .failure {
-                        Text(item.displayTitle)
-                            .font(.largeTitle)
-                            .fontWeight(.semibold)
-                    }
-                    .edgePadding(.leading)
-                    .aspectRatio(contentMode: .fit)
-                    .frame(height: CinematicSelectionLayout.logoMaxHeight, alignment: .bottomLeading)
-                    .frame(maxWidth: CinematicSelectionLayout.logoMaxWidth)
+                HeroTitleBlock(
+                    item: item.snapshot,
+                    logo: itemSelectorImageSource(for: item.snapshot)
+                )
             }
             .preference(
                 key: ContentGroupCustomizationKey.self,
@@ -187,6 +178,57 @@ final class CinematicSelectionContentGroupViewModel: ViewModel, WithRefresh {
         async let recentlyAdded: Void = recentlyAddedViewModel.refresh()
 
         _ = await (resume, recentlyAdded)
+    }
+}
+
+/// Plex-style hero text: logo (or title), one metadata line, two-line synopsis.
+private struct HeroTitleBlock: View {
+
+    let item: BaseItemDto
+    let logo: ImageSource?
+
+    private var metadata: [String] {
+        [
+            item.type == .episode ? item.seasonEpisodeLabel : nil,
+            item.productionYear.map(String.init),
+            item.officialRating,
+            item.runTimeLabel,
+            item.communityRating.map { String(format: "★ %.1f", $0) },
+        ].compactMap { $0 }
+    }
+
+    @ContentBuilder
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            ImageView(logo)
+                .placeholder { _ in
+                    EmptyView()
+                }
+                .failure {
+                    Text(item.type == .episode ? (item.seriesName ?? item.displayTitle) : item.displayTitle)
+                        .font(.system(size: 64, weight: .bold))
+                        .lineLimit(2)
+                }
+                .aspectRatio(contentMode: .fit)
+                .frame(height: CinematicSelectionLayout.logoMaxHeight, alignment: .bottomLeading)
+                .frame(maxWidth: CinematicSelectionLayout.logoMaxWidth, alignment: .leading)
+
+            if metadata.isNotEmpty {
+                Text(metadata.joined(separator: "  ·  "))
+                    .font(.callout.weight(.semibold))
+                    .foregroundStyle(.white.opacity(0.75))
+            }
+
+            if let overview = item.overview, overview.isNotEmpty {
+                Text(overview)
+                    .font(.callout)
+                    .foregroundStyle(.white.opacity(0.85))
+                    .lineLimit(2)
+                    .frame(maxWidth: 900, alignment: .leading)
+            }
+        }
+        .shadow(color: .black.opacity(0.5), radius: 8)
+        .edgePadding(.leading)
     }
 }
 

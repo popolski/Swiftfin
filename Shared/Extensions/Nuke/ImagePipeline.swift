@@ -9,7 +9,6 @@
 import FactoryKit
 import Foundation
 import Nuke
-import Pulse
 import UIKit
 
 extension ImagePipeline {
@@ -66,30 +65,16 @@ extension ImagePipeline.Swiftfin {
     /// or server user images that should be presentable with an active connection.
     static let posters: ImagePipeline = ImagePipeline(delegate: SwiftfinImagePipelineDelegate()) { config in
         config.dataCache = DataCache.Swiftfin.posters
-
-        let dataLoader = DataLoader(
-            configuration: .swiftfin
-        )
-        dataLoader.delegate = URLSessionProxyDelegate(
-            logger: NetworkLogger.swiftfin(),
-            delegate: nil
-        )
-        config.dataLoader = dataLoader
+        // Image traffic is not logged: recording every image body made scrolling stutter.
+        config.dataLoader = DataLoader(configuration: .swiftfin)
     }
 
     /// The `ImagePipeline` used for images that should have longer lifetimes and usable
     /// without a connection, likes local user profile images and server splashscreens.
     static let local: ImagePipeline = ImagePipeline(delegate: SwiftfinImagePipelineDelegate()) { config in
         config.dataCache = DataCache.Swiftfin.local
-
-        let dataLoader = DataLoader(
-            configuration: .swiftfin
-        )
-        dataLoader.delegate = URLSessionProxyDelegate(
-            logger: NetworkLogger.swiftfin(),
-            delegate: nil
-        )
-        config.dataLoader = dataLoader
+        // Image traffic is not logged: recording every image body made scrolling stutter.
+        config.dataLoader = DataLoader(configuration: .swiftfin)
     }
 
     /// An `ImagePipeline` for images to prevent more important images from losing their cache.

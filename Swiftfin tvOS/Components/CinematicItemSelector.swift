@@ -81,11 +81,22 @@ struct CinematicItemSelector<Item: Poster, TopContent: View>: View {
                 item: resolvedSelectedPoster,
                 debounce: 0.5
             ) { item in
-                ImageView(item?.imageSources(for: .landscape, environment: .init(viewContext: .isBackdrop)) ?? [])
+                ImageView(item?.imageSources(for: .landscape, environment: .init(maxWidth: 1280, viewContext: .isBackdrop)) ?? [])
                     .failure {
                         EmptyView()
                     }
                     .aspectRatio(contentMode: .fill)
+            }
+            .overlay {
+                LinearGradient(
+                    stops: [
+                        .init(color: .black.opacity(0.75), location: 0),
+                        .init(color: .black.opacity(0.35), location: 0.45),
+                        .init(color: .clear, location: 0.7),
+                    ],
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
             }
             .overlay {
                 Color.black

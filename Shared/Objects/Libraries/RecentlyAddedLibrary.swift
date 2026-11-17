@@ -19,7 +19,7 @@ struct RecentlyAddedLibrary: BaseItemKindLibrary {
     ) async throws -> [ItemPatch] {
         var parameters = Paths.GetItemsParameters()
         parameters.enableUserData = true
-        parameters.fields = PosterSubtitleField.itemFields
+        parameters.fields = PosterSubtitleField.itemFields + [.overview]
         parameters.includeItemTypes = [.movie, .series]
         parameters.isRecursive = true
         parameters.limit = pageState.pageSize

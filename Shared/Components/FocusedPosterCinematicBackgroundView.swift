@@ -8,8 +8,14 @@
 
 #if os(tvOS)
 import Defaults
+import Nuke
+import NukeUI
 import SwiftUI
 
+/// Full-screen ambient backdrop behind the tabs.
+///
+/// A small backdrop is blurred once by Nuke and cached, then scaled up.
+/// The previous live `UIVisualEffectView` re-blurred the full screen every frame.
 struct FocusedPosterCinematicBackgroundView: View {
 
     @Default(.Customization.Library.cinematicBackground)
@@ -23,15 +29,25 @@ struct FocusedPosterCinematicBackgroundView: View {
         if isCinematicBackgroundEnabled {
             FadeContentTransitionView(
                 item: focusedPoster,
-                debounce: 0.5
+                duration: 0.6,
+                debounce: 0.4
             ) { item in
-                ImageView(item?.imageSources(for: .landscape, environment: .init(viewContext: .isBackdrop)) ?? [])
-                    .failure {
-                        EmptyView()
+                let url = item?.imageSources(
+                    for: .landscape,
+                    environment: .init(maxWidth: 240, quality: 60, viewContext: .isBackdrop)
+                ).first?.url
+
+                LazyImage(
+                    request: url.map { ImageRequest(url: $0, processors: [ImageProcessors.GaussianBlur(radius: 6)]) }
+                ) { state in
+                    if let image = state.image {
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
                     }
-                    .aspectRatio(contentMode: .fill)
+                }
             }
-            .blurred()
+            .overlay(Color.black.opacity(0.55))
             .ignoresSafeArea()
         }
     }

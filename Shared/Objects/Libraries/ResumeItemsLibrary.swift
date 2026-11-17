@@ -31,7 +31,7 @@ struct ResumeItemsLibrary: BaseItemKindLibrary {
     ) async throws -> [ItemPatch] {
         var parameters = Paths.GetResumeItemsParameters()
         parameters.enableUserData = true
-        parameters.fields = PosterSubtitleField.itemFields
+        parameters.fields = PosterSubtitleField.itemFields + [.overview]
         parameters.limit = pageState.pageSize
         parameters.mediaTypes = mediaTypes
         parameters.startIndex = pageState.pageOffset
